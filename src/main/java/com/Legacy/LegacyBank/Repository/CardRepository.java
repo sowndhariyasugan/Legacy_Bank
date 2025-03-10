@@ -1,13 +1,14 @@
 package com.Legacy.LegacyBank.Repository;
 
-import com.Legacy.LegacyBank.Model.Card;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.Legacy.LegacyBank.Model.Card;
+import com.Legacy.LegacyBank.Model.User;
 
 import java.util.List;
-import java.util.Optional;
 
-public interface CardRepository extends JpaRepository<Card, String> {
-    Optional<Card> findByNumber(String number);
-    List<Card> findByUserId(String userId);
-    boolean existsByNumber(String number);
+@Repository
+public interface CardRepository extends JpaRepository<Card, Long> {
+    List<Card> findByUser(User user);
 }

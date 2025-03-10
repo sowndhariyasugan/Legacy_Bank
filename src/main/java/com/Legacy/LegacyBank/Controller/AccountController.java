@@ -1,15 +1,11 @@
 package com.Legacy.LegacyBank.Controller;
 
-import com.Legacy.LegacyBank.Model.Account;
-import com.Legacy.LegacyBank.Model.AccountType;
-import com.Legacy.LegacyBank.Model.Transaction;
-import com.Legacy.LegacyBank.Service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import com.Legacy.LegacyBank.Model.Account;
+import com.Legacy.LegacyBank.Service.AccountService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -18,88 +14,110 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/accounts")
 public class AccountController {
-    
+
     @Autowired
     private AccountService accountService;
-    
+
+    @GetMapping
+    public List<Account> getAllAccounts() {
+        return accountService.getAllAccounts();
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<Account> getAccount(@PathVariable String id) {
+    public ResponseEntity<Account> getAccountById(@PathVariable Long id) {
+        return accountService.getAccountById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public Account createAccount(@RequestBody Account account) {
+        return accountService.createAccount(account);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Account> updateAccount(@PathVariable Long id, @RequestBody Account accountDetails) {
         try {
-            Account account = accountService.findAccountById(id);
-            return ResponseEntity.ok(account);
+            Account updatedAccount = accountService.updateAccount(id, accountDetails);
+            return ResponseEntity.ok(updatedAccount);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
-    
-    @PostMapping
-    public ResponseEntity<?> createAccount(@RequestBody Map<String, Object> request) {
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAccount(@PathVariable Long id) {
         try {
-            Account account = accountService.createAccount(
-                (String) request.get("userId"),
-                AccountType.valueOf((String) request.get("type"))
-            );
-            return new ResponseEntity<>(account, HttpStatus.CREATED);
+            accountService.deleteAccount(id);
+            return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            return ResponseEntity
-                .badRequest()
-                .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.notFound().build();
         }
     }
-    
-    @GetMapping("/{id}/transactions")
-    public ResponseEntity<?> getTransactions(@PathVariable String id) {
-        try {
-            List<Transaction> transactions = accountService.getTransactionHistory(id);
-            return ResponseEntity.ok(transactions);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                .badRequest()
-                .body(Map.of("error", e.getMessage()));
-        }
+
+    @GetMapping("/user/{userId}")
+    public List<Account> getAccountsByUserId(@PathVariable Long userId) {
+        return accountService.getAccountsByUserId(userId);
     }
-    
+
+    @GetMapping("/number/{accountNumber}")
+    public ResponseEntity<Account> getAccountByNumber(@PathVariable String accountNumber) {
+        return accountService.getAccountByNumber(accountNumber)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping("/{id}/deposit")
-    public ResponseEntity<?> deposit(
-            @PathVariable String id,
-            @RequestBody Map<String, BigDecimal> request) {
+    public ResponseEntity<Account> deposit(@PathVariable Long id, @RequestBody Map<String, BigDecimal> request) {
+        BigDecimal amount = request.get("amount");
+        if (amount == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        
         try {
-            accountService.deposit(id, request.get("amount"));
-            return ResponseEntity.ok().build();
+            Account account = accountService.deposit(id, amount);
+            return ResponseEntity.ok(account);
         } catch (RuntimeException e) {
-            return ResponseEntity
-                .badRequest()
-                .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(null);
         }
     }
     
     @PostMapping("/{id}/withdraw")
-    public ResponseEntity<?> withdraw(
-            @PathVariable String id,
-            @RequestBody Map<String, BigDecimal> request) {
+    public ResponseEntity<Account> withdraw(@PathVariable Long id, @RequestBody Map<String, BigDecimal> request) {
+        BigDecimal amount = request.get("amount");
+        if (amount == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        
         try {
-            accountService.withdraw(id, request.get("amount"));
-            return ResponseEntity.ok().build();
+            Account account = accountService.withdraw(id, amount);
+            return ResponseEntity.ok(account);
         } catch (RuntimeException e) {
-            return ResponseEntity
-                .badRequest()
-                .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(null);
         }
     }
     
     @PostMapping("/transfer")
     public ResponseEntity<?> transfer(@RequestBody Map<String, Object> request) {
         try {
-            accountService.transfer(
-                (String) request.get("fromAccountId"),
-                (String) request.get("toAccountId"),
-                new BigDecimal(request.get("amount").toString())
-            );
+            Long fromAccountId = Long.valueOf(request.get("fromAccountId").toString());
+            Long toAccountId = Long.valueOf(request.get("toAccountId").toString());
+            BigDecimal amount = new BigDecimal(request.get("amount").toString());
+            
+            accountService.transfer(fromAccountId, toAccountId, amount);
             return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
+    @GetMapping("/{id}/balance")
+    public ResponseEntity<Map<String, BigDecimal>> getBalance(@PathVariable Long id) {
+        try {
+            BigDecimal balance = accountService.getBalance(id);
+            return ResponseEntity.ok(Map.of("balance", balance));
         } catch (RuntimeException e) {
-            return ResponseEntity
-                .badRequest()
-                .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.notFound().build();
         }
     }
 }

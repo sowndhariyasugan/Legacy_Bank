@@ -2,6 +2,8 @@ package com.Legacy.LegacyBank.Model;
 
 public enum TransactionType {
     DEPOSIT,
-    WITHDRAW,
-    TRANSFER
+    WITHDRAWAL,
+    TRANSFER,
+    PAYMENT,
+    REFUND
 }
