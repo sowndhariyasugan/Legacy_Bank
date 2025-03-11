@@ -1,6 +1,8 @@
 package com.Legacy.LegacyBank.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,9 @@ public class AccountService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private UserService userService;
+
     public List<Account> getAllAccounts() {
         return accountRepository.findAll();
     }
@@ -40,13 +45,39 @@ public class AccountService {
     public Optional<Account> getAccountByNumber(String accountNumber) {
         return accountRepository.findByAccountNumber(accountNumber);
     }
+    private String getAuthenticatedUsername() {
+        // Get the authentication object from the security context
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
+        if (principal instanceof UserDetails) {
+            return ((UserDetails) principal).getUsername();
+        } else {
+            return null; // Handle non-authenticated state
+        }
+    }
     public Account createAccount(Account account) {
         // Generate a unique account number if not provided
         if (account.getAccountNumber() == null || account.getAccountNumber().isEmpty()) {
             account.setAccountNumber(generateAccountNumber());
         }
-        
+
+        // Set the balance to zero
+        account.setBalance(BigDecimal.ZERO);
+
+        // Get the currently authenticated user (assuming you're using JWT authentication)
+        String username = getAuthenticatedUsername();
+
+        if (username != null) {
+            // Fetch the user entity using the username
+            User user = userService.findByUsername(username);
+
+            // Set the account's user to the currently authenticated user
+            account.setUser(user);
+        } else {
+            throw new RuntimeException("No authenticated user found");
+        }
+
+        // Save the account
         return accountRepository.save(account);
     }
     

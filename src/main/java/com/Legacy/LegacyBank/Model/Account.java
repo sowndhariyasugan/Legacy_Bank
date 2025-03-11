@@ -20,6 +20,9 @@ public class Account {
     private Long id;
 
     @Column(nullable = false, unique = true)
+    private String accountHolder;
+
+    @Column(nullable = false, unique = true)
     private String accountNumber;
 
     @Column(nullable = false)
@@ -34,4 +37,8 @@ public class Account {
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
     private Set<Transaction> transactions = new HashSet<>();
+
+    @OneToOne
+    @JoinColumn(name = "card_id") // This will reference the 'Card' table's primary key
+    private Card card;
 }

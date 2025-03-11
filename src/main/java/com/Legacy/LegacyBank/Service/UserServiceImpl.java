@@ -33,6 +33,11 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(id);
     }
 
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
     @Override
     public User createUser(User user) {
         // Check if email already exists
