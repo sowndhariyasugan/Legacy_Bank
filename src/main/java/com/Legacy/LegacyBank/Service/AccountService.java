@@ -1,175 +1,33 @@
 package com.Legacy.LegacyBank.Service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.Legacy.LegacyBank.Model.Account;
+import com.Legacy.LegacyBank.Model.AccountType;
 import com.Legacy.LegacyBank.Model.User;
-import com.Legacy.LegacyBank.Repository.AccountRepository;
-import com.Legacy.LegacyBank.Repository.UserRepository;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
-@Service
-public class AccountService {
-
-    @Autowired
-    private AccountRepository accountRepository;
+public interface AccountService {
+    List<Account> getAllAccounts();
     
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private UserService userService;
-
-    public List<Account> getAllAccounts() {
-        return accountRepository.findAll();
-    }
+    List<Account> getAccountsByUserId(Long userId);
     
-    public List<Account> getAccountsByUserId(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
-        return accountRepository.findByUser(user);
-    }
-
-    public Optional<Account> getAccountById(Long id) {
-        return accountRepository.findById(id);
-    }
+    Optional<Account> getAccountById(Long id);
     
-    public Optional<Account> getAccountByNumber(String accountNumber) {
-        return accountRepository.findByAccountNumber(accountNumber);
-    }
-    private String getAuthenticatedUsername() {
-        // Get the authentication object from the security context
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        if (principal instanceof UserDetails) {
-            return ((UserDetails) principal).getUsername();
-        } else {
-            return null; // Handle non-authenticated state
-        }
-    }
-    public Account createAccount(Account account) {
-        // Generate a unique account number if not provided
-        if (account.getAccountNumber() == null || account.getAccountNumber().isEmpty()) {
-            account.setAccountNumber(generateAccountNumber());
-        }
-
-        // Set the balance to zero
-        account.setBalance(BigDecimal.ZERO);
-
-        // Get the currently authenticated user (assuming you're using JWT authentication)
-        String username = getAuthenticatedUsername();
-
-        if (username != null) {
-            // Fetch the user entity using the username
-            User user = userService.findByUsername(username);
-
-            // Set the account's user to the currently authenticated user
-            account.setUser(user);
-        } else {
-            throw new RuntimeException("No authenticated user found");
-        }
-
-        // Save the account
-        return accountRepository.save(account);
-    }
+    Optional<Account> getAccountByNumber(String accountNumber);
     
-    public Account updateAccount(Long id, Account accountDetails) {
-        Account account = accountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Account not found with id: " + id));
-        
-        // Update account fields
-        if (accountDetails.getAccountType() != null) {
-            account.setAccountType(accountDetails.getAccountType());
-        }
-        
-        // Don't allow direct balance updates through this method
-        // Other fields can be updated as needed
-        
-        return accountRepository.save(account);
-    }
+    Account createAccount(User user, AccountType accountType, String currency);
     
-    public void deleteAccount(Long id) {
-        Account account = accountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Account not found with id: " + id));
-        
-        // Check if account has zero balance before deletion
-        if (account.getBalance().compareTo(BigDecimal.ZERO) != 0) {
-            throw new RuntimeException("Cannot delete account with non-zero balance");
-        }
-        
-        accountRepository.delete(account);
-    }
+    Account updateAccount(Long id, Account accountDetails);
     
-    private String generateAccountNumber() {
-        // Generate a random account number
-        return "ACC" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-    }
-
-    @Transactional
-    public Account deposit(Long accountId, BigDecimal amount) {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Deposit amount must be positive");
-        }
-        
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
-        
-        account.setBalance(account.getBalance().add(amount));
-        return accountRepository.save(account);
-    }
+    void deleteAccount(Long id);
     
-    @Transactional
-    public Account withdraw(Long accountId, BigDecimal amount) {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Withdrawal amount must be positive");
-        }
-        
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
-        
-        if (account.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient funds");
-        }
-        
-        account.setBalance(account.getBalance().subtract(amount));
-        return accountRepository.save(account);
-    }
+    Account deposit(Long accountId, BigDecimal amount);
     
-    @Transactional
-    public void transfer(Long fromAccountId, Long toAccountId, BigDecimal amount) {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Transfer amount must be positive");
-        }
-        
-        Account fromAccount = accountRepository.findById(fromAccountId)
-                .orElseThrow(() -> new RuntimeException("Source account not found with id: " + fromAccountId));
-        
-        Account toAccount = accountRepository.findById(toAccountId)
-                .orElseThrow(() -> new RuntimeException("Target account not found with id: " + toAccountId));
-        
-        if (fromAccount.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient funds in source account");
-        }
-        
-        fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
-        toAccount.setBalance(toAccount.getBalance().add(amount));
-        
-        accountRepository.save(fromAccount);
-        accountRepository.save(toAccount);
-    }
+    Account withdraw(Long accountId, BigDecimal amount);
     
-    public BigDecimal getBalance(Long accountId) {
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
-        
-        return account.getBalance();
-    }
+    void transfer(Long fromAccountId, Long toAccountId, BigDecimal amount);
+    
+    BigDecimal getBalance(Long accountId);
 }

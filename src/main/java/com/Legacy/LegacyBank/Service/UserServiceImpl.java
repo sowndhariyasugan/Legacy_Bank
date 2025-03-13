@@ -57,22 +57,22 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-@Transactional
-public User registerUser(String username, String password) {
-    // Check if username already exists
-    if (userRepository.existsByUsername(username)) {
-        throw new RuntimeException("Username is already taken!");
+    @Transactional
+    public User registerUser(String username, String password) {
+        // Check if username already exists
+        if (userRepository.existsByUsername(username)) {
+            throw new RuntimeException("Username is already taken!");
+        }
+        
+        // Create new user
+        User user = new User();
+        user.setUsername(username);
+        // Also set the email to the username to avoid null constraint violation
+        user.setEmail(username);
+        user.setPassword(passwordEncoder.encode(password));
+        
+        return userRepository.save(user);
     }
-    
-    // Create new user
-    User user = new User();
-    user.setUsername(username);
-    // Also set the email to the username to avoid null constraint violation
-    user.setEmail(username);
-    user.setPassword(passwordEncoder.encode(password));
-    
-    return userRepository.save(user);
-}
 
     @Override
     public User updateUser(Long id, User userDetails) {
@@ -130,26 +130,36 @@ public User registerUser(String username, String password) {
     }
 
     @Override
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    @Override
     @Transactional
-    public User registerUser(String email, String password, String firstName, String lastName) {
+    public User registerUser(String username, String email, String password, String firstName, String lastName) {
+        // Check if username already exists
+        if (userRepository.existsByUsername(username)) {
+            throw new RuntimeException("Username already exists");
+        }
+        
         // Check if email already exists
         if (userRepository.existsByEmail(email)) {
             throw new RuntimeException("Email already exists");
         }
         
-        // Create new user
         User user = new User();
+        user.setUsername(username);
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
         user.setFirstName(firstName);
         user.setLastName(lastName);
         
         return userRepository.save(user);
-    }
-
-    @Override
-    public boolean existsByEmail(String email) {
-        return userRepository.existsByEmail(email);
     }
 
     @Override

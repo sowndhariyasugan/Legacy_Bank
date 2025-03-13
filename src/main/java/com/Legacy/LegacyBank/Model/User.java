@@ -37,6 +37,9 @@ public class User {
     
     @Column(name = "profile_image")
     private String profileImage;
+    
+    @Column(name = "profile_settings", columnDefinition = "json")
+    private String profileSettings;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<Card> cards = new HashSet<>();

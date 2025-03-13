@@ -13,34 +13,29 @@ import lombok.NoArgsConstructor;
 public class Card {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "card_id")
     private Long id;
 
-    @Column(nullable = false)
-    private String type; // Visa, Mastercard, etc.
+    @Column(name = "card_type", nullable = false)
+    private String cardType;
+
+    @Column(name = "card_number", nullable = false)
+    private String cardNumber;
+
+    @Column(name = "expiry_date", nullable = false)
+    private String expiryDate;
 
     @Column(nullable = false)
-    private String number; // Masked card number
+    private String cvv;
 
     @Column(nullable = false)
-    private String expiry;
-
-    @Column(nullable = false)
-    private String bank;
-
-    private String color;
-
-    @Column(name = "annual_fee")
-    private String annualFee;
-
-    @Column(name = "cashback_rate")
-    private String cashbackRate;
-
-    private String rewards;
+    private String status;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @OneToOne(mappedBy = "card")
+    
+    @ManyToOne
+    @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 }

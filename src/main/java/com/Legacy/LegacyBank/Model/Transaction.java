@@ -16,28 +16,36 @@ import java.time.LocalDateTime;
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "transaction_id")
     private Long id;
-
-    @Column(nullable = false)
-    private String description;
-
-    @Column(nullable = false)
-    private BigDecimal amount;
-
-    @Column(nullable = false)
-    private LocalDateTime date;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private TransactionType type;
 
-    @Column(name = "merchant_name")
-    private String merchantName;
-
-    @Column(name = "merchant_category")
-    private String merchantCategory;
+    @Column(nullable = false)
+    private BigDecimal amount;
 
     @ManyToOne
-    @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
+    @JoinColumn(name = "from_account_id")
+    private Account fromAccount;
+
+    @ManyToOne
+    @JoinColumn(name = "to_account_id")
+    private Account toAccount;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TransactionStatus status;
+
+    @Column(nullable = false)
+    private LocalDateTime timestamp;
+    
+    @Column
+    private String description;
+    
+    @PrePersist
+    protected void onCreate() {
+        timestamp = LocalDateTime.now();
+    }
 }

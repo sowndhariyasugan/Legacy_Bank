@@ -1,13 +1,20 @@
 package com.Legacy.LegacyBank.Controller;
 
+import com.Legacy.LegacyBank.Model.Account;
+import com.Legacy.LegacyBank.Model.AccountType;
+import com.Legacy.LegacyBank.Model.User;
+import com.Legacy.LegacyBank.Service.AccountService;
+import com.Legacy.LegacyBank.Service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import com.Legacy.LegacyBank.Model.Account;
-import com.Legacy.LegacyBank.Service.AccountService;
-
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,22 +24,74 @@ public class AccountController {
 
     @Autowired
     private AccountService accountService;
+    
+    @Autowired
+    private UserService userService;
 
     @GetMapping
-    public List<Account> getAllAccounts() {
-        return accountService.getAllAccounts();
+    public ResponseEntity<List<Account>> getAllAccounts() {
+        // Get current authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User user = userService.findByUsername(username);
+        
+        // Return only the accounts belonging to the authenticated user
+        List<Account> accounts = accountService.getAccountsByUserId(user.getId());
+        return ResponseEntity.ok(accounts);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Account> getAccountById(@PathVariable Long id) {
+    public ResponseEntity<?> getAccountById(@PathVariable Long id) {
+        // Get current authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User user = userService.findByUsername(username);
+        
+        // Check if the account belongs to the authenticated user
         return accountService.getAccountById(id)
-                .map(ResponseEntity::ok)
+                .map(account -> {
+                    if (!account.getUser().getId().equals(user.getId())) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body(Map.of("error", "You do not have permission to access this account"));
+                    }
+                    return ResponseEntity.ok(account);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Account createAccount(@RequestBody Account account) {
-        return accountService.createAccount(account);
+    public ResponseEntity<?> createAccount(@Valid @RequestBody Map<String, String> request) {
+        try {
+            // Get current authenticated user
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            User user = userService.findByUsername(username);
+            
+            // Validate input
+            String accountTypeStr = request.get("accountType");
+            if (accountTypeStr == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Account type is required"));
+            }
+            
+            AccountType accountType;
+            try {
+                accountType = AccountType.valueOf(accountTypeStr.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Invalid account type"));
+            }
+            
+            String currency = request.get("currency");
+            if (currency == null) {
+                currency = "USD"; // Default currency
+            }
+            
+            // Create account
+            Account account = accountService.createAccount(user, accountType, currency);
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(account);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PutMapping("/{id}")
