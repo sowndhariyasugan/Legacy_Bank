@@ -1,4 +1,4 @@
- # Legacy Bank API
+# Legacy Bank API
 
 A RESTful API for a banking application with user authentication, account management, transaction processing, card management, and user settings.
 
@@ -24,6 +24,58 @@ A RESTful API for a banking application with user authentication, account manage
 - Lombok
 - OpenAPI/Swagger Documentation
 
+## Project Structure
+
+```
+src/main/java/com/Legacy/LegacyBank/
+├── Config/
+│   └── OpenApiConfig.java
+├── Controller/
+│   ├── AuthController.java
+│   ├── UserController.java
+│   ├── AccountController.java
+│   ├── TransactionController.java
+│   ├── CardController.java
+│   └── SettingsController.java
+├── Model/
+│   ├── User.java
+│   ├── Account.java
+│   ├── Transaction.java
+│   ├── Card.java
+│   ├── Settings.java
+│   ├── Notification.java
+│   ├── TransactionType.java
+│   ├── TransactionStatus.java
+│   ├── AccountType.java
+│   ├── ERole.java
+│   └── Role.java
+├── Repository/
+│   ├── UserRepository.java
+│   ├── AccountRepository.java
+│   ├── TransactionRepository.java
+│   ├── CardRepository.java
+│   ├── SettingsRepository.java
+│   ├── NotificationRepository.java
+│   └── RoleRepository.java
+├── Service/
+│   ├── UserService.java
+│   ├── UserServiceImpl.java
+│   ├── AccountService.java
+│   ├── AccountServiceImpl.java
+│   ├── TransactionService.java
+│   ├── TransactionServiceImpl.java
+│   ├── NotificationService.java
+│   ├── JwtService.java
+│   ├── UserDetailsImpl.java
+│   └── UserDetailsServiceImpl.java
+└── Security/
+    ├── WebSecurityConfig.java
+    └── Jwt/
+        ├── AuthTokenFilter.java
+        ├── AuthEntryPointJwt.java
+        └── JwtUtils.java
+```
+
 ## Getting Started
 
 ### Prerequisites
@@ -38,7 +90,7 @@ A RESTful API for a banking application with user authentication, account manage
 2. Configure your MySQL database in `application.properties` (update username/password if needed)
 3. Run the application:
 
-```
+```bash
 mvn spring-boot:run
 ```
 
@@ -55,13 +107,16 @@ mvn spring-boot:run
 - **Method**: POST
 - **Auth required**: No
 - **Payload**:
+
 ```json
 {
   "username": "string",
   "password": "string"
 }
 ```
+
 - **Success Response**:
+
 ```json
 {
   "token": "JWT_TOKEN",
@@ -69,7 +124,9 @@ mvn spring-boot:run
   "username": "string"
 }
 ```
+
 - **Error Response**:
+
 ```json
 {
   "error": "Invalid username or password"
@@ -82,6 +139,7 @@ mvn spring-boot:run
 - **Method**: POST
 - **Auth required**: No
 - **Payload**:
+
 ```json
 {
   "username": "string",
@@ -91,7 +149,9 @@ mvn spring-boot:run
   "lastName": "string"
 }
 ```
+
 - **Success Response**:
+
 ```json
 {
   "message": "User registered successfully",
@@ -99,7 +159,9 @@ mvn spring-boot:run
   "username": "string"
 }
 ```
+
 - **Error Response**:
+
 ```json
 {
   "error": "Username is already taken"
@@ -112,9 +174,132 @@ mvn spring-boot:run
 - **Method**: POST
 - **Auth required**: Yes (JWT)
 - **Success Response**:
+
 ```json
 {
   "message": "Logged out successfully"
+}
+```
+
+### Users
+
+#### Get All Users
+
+- **URL**: `/api/users`
+- **Method**: GET
+- **Auth required**: Yes (JWT)
+- **Success Response**:
+
+```json
+[
+  {
+    "id": 1,
+    "username": "johndoe",
+    "email": "john@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "phone": "+1234567890",
+    "profileImage": "profile.jpg",
+    "accounts": [
+      {
+        "id": 1,
+        "accountType": "SAVINGS",
+        "accountNumber": "ACC12345678",
+        "balance": 1000.5,
+        "currency": "USD",
+        "status": "ACTIVE"
+      }
+    ]
+  }
+]
+```
+
+#### Get User by ID
+
+- **URL**: `/api/users/{id}`
+- **Method**: GET
+- **Auth required**: Yes (JWT)
+- **Success Response**:
+
+```json
+{
+  "id": 1,
+  "username": "johndoe",
+  "email": "john@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "phone": "+1234567890",
+  "profileImage": "profile.jpg",
+  "accounts": [
+    {
+      "id": 1,
+      "accountType": "SAVINGS",
+      "accountNumber": "ACC12345678",
+      "balance": 1000.5,
+      "currency": "USD",
+      "status": "ACTIVE"
+    }
+  ]
+}
+```
+
+- **Error Response**:
+
+```json
+{
+  "error": "User not found"
+}
+```
+
+#### Update User
+
+- **URL**: `/api/users/{id}`
+- **Method**: PUT
+- **Auth required**: Yes (JWT)
+- **Payload**:
+
+```json
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "phone": "+1234567890",
+  "profileImage": "profile.jpg"
+}
+```
+
+- **Success Response**:
+
+```json
+{
+  "id": 1,
+  "username": "johndoe",
+  "email": "john@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "phone": "+1234567890",
+  "profileImage": "profile.jpg"
+}
+```
+
+- **Error Response**:
+
+```json
+{
+  "error": "User not found"
+}
+```
+
+#### Delete User
+
+- **URL**: `/api/users/{id}`
+- **Method**: DELETE
+- **Auth required**: Yes (JWT)
+- **Success Response**: 204 No Content
+- **Error Response**:
+
+```json
+{
+  "error": "User not found"
 }
 ```
 
@@ -126,16 +311,22 @@ mvn spring-boot:run
 - **Method**: GET
 - **Auth required**: Yes (JWT)
 - **Success Response**:
+
 ```json
 [
   {
     "id": 1,
     "accountType": "SAVINGS",
-    "balance": 1000.50,
+    "accountNumber": "ACC12345678",
+    "balance": 1000.5,
     "currency": "USD",
     "status": "ACTIVE",
-    "createdAt": "2023-01-01T12:00:00",
-    "accountNumber": "ACC12345678"
+    "user": {
+      "id": 1,
+      "username": "johndoe",
+      "firstName": "John",
+      "lastName": "Doe"
+    }
   }
 ]
 ```
@@ -146,18 +337,21 @@ mvn spring-boot:run
 - **Method**: GET
 - **Auth required**: Yes (JWT)
 - **Success Response**:
+
 ```json
 {
   "id": 1,
   "accountType": "SAVINGS",
-  "balance": 1000.50,
+  "balance": 1000.5,
   "currency": "USD",
   "status": "ACTIVE",
   "createdAt": "2023-01-01T12:00:00",
   "accountNumber": "ACC12345678"
 }
 ```
+
 - **Error Response**:
+
 ```json
 {
   "error": "Account not found"
@@ -170,28 +364,93 @@ mvn spring-boot:run
 - **Method**: POST
 - **Auth required**: Yes (JWT)
 - **Payload**:
+
 ```json
 {
   "accountType": "SAVINGS",
   "currency": "USD"
 }
 ```
+
 - **Success Response**:
+
 ```json
 {
   "id": 1,
   "accountType": "SAVINGS",
-  "balance": 0.00,
+  "accountNumber": "ACC12345678",
+  "balance": 0.0,
+  "currency": "USD",
+  "status": "ACTIVE",
+  "user": {
+    "id": 1,
+    "username": "johndoe",
+    "firstName": "John",
+    "lastName": "Doe"
+  }
+}
+```
+
+- **Error Response**:
+
+```json
+{
+  "error": "Invalid account type"
+}
+```
+
+#### Get User Accounts
+
+- **URL**: `/api/accounts/user/{userId}`
+- **Method**: GET
+- **Auth required**: Yes (JWT)
+
+#### Update Account
+
+- **URL**: `/api/accounts/{id}`
+- **Method**: PUT
+- **Auth required**: Yes (JWT)
+- **Payload**:
+
+```json
+{
+  "status": "ACTIVE"
+}
+```
+
+- **Success Response**:
+
+```json
+{
+  "id": 1,
+  "accountType": "SAVINGS",
+  "balance": 1000.5,
   "currency": "USD",
   "status": "ACTIVE",
   "createdAt": "2023-01-01T12:00:00",
   "accountNumber": "ACC12345678"
 }
 ```
+
 - **Error Response**:
+
 ```json
 {
-  "error": "Invalid account type"
+  "error": "Account not found"
+}
+```
+
+#### Delete Account
+
+- **URL**: `/api/accounts/{id}`
+- **Method**: DELETE
+- **Auth required**: Yes (JWT)
+- **Success Response**: 204 No Content
+- **Error Response**:
+
+```json
+{
+  "error": "Account not found"
 }
 ```
 
@@ -203,28 +462,33 @@ mvn spring-boot:run
 - **Method**: POST
 - **Auth required**: Yes (JWT)
 - **Payload**:
+
 ```json
 {
   "accountId": 1,
-  "amount": 100.50,
+  "amount": 100.5,
   "description": "Salary deposit"
 }
 ```
+
 - **Success Response**:
+
 ```json
 {
   "message": "Deposit successful",
   "transaction": {
     "id": 1,
     "type": "DEPOSIT",
-    "amount": 100.50,
+    "amount": 100.5,
     "timestamp": "2023-01-01T12:00:00",
     "status": "COMPLETED",
     "description": "Salary deposit"
   }
 }
 ```
+
 - **Error Response**:
+
 ```json
 {
   "error": "Deposit amount must be positive"
@@ -237,6 +501,7 @@ mvn spring-boot:run
 - **Method**: POST
 - **Auth required**: Yes (JWT)
 - **Payload**:
+
 ```json
 {
   "accountId": 1,
@@ -244,7 +509,9 @@ mvn spring-boot:run
   "description": "ATM withdrawal"
 }
 ```
+
 - **Success Response**:
+
 ```json
 {
   "message": "Withdrawal successful",
@@ -258,44 +525,66 @@ mvn spring-boot:run
   }
 }
 ```
+
 - **Error Response**:
+
 ```json
 {
   "error": "Insufficient funds"
 }
 ```
 
-#### Transfer
+#### Transfer Between Users
 
 - **URL**: `/api/transactions/transfer`
 - **Method**: POST
 - **Auth required**: Yes (JWT)
 - **Payload**:
+
 ```json
 {
   "fromAccountId": 1,
   "toAccountId": 2,
-  "amount": 200.00,
+  "amount": 200.0,
   "description": "Rent payment"
 }
 ```
+
 - **Success Response**:
+
 ```json
 {
-  "message": "Transfer successful",
-  "transaction": {
+  "id": 1,
+  "type": "TRANSFER",
+  "amount": 200.0,
+  "fromAccount": {
     "id": 1,
-    "type": "TRANSFER",
-    "amount": 200.00,
-    "fromAccount": { "id": 1 },
-    "toAccount": { "id": 2 },
-    "timestamp": "2023-01-01T12:00:00",
-    "status": "COMPLETED",
-    "description": "Rent payment"
-  }
+    "accountNumber": "ACC12345678",
+    "user": {
+      "id": 1,
+      "username": "johndoe",
+      "firstName": "John",
+      "lastName": "Doe"
+    }
+  },
+  "toAccount": {
+    "id": 2,
+    "accountNumber": "ACC87654321",
+    "user": {
+      "id": 2,
+      "username": "janesmith",
+      "firstName": "Jane",
+      "lastName": "Smith"
+    }
+  },
+  "status": "COMPLETED",
+  "timestamp": "2024-03-21T10:00:00",
+  "description": "Rent payment"
 }
 ```
+
 - **Error Response**:
+
 ```json
 {
   "error": "Insufficient funds in source account"
@@ -314,16 +603,37 @@ mvn spring-boot:run
   - `page` (optional): Page number
   - `size` (optional): Page size
 - **Success Response**:
+
 ```json
 {
   "content": [
     {
       "id": 1,
-      "type": "DEPOSIT",
-      "amount": 100.50,
-      "timestamp": "2023-01-01T12:00:00",
+      "type": "TRANSFER",
+      "amount": 200.0,
+      "fromAccount": {
+        "id": 1,
+        "accountNumber": "ACC12345678",
+        "user": {
+          "id": 1,
+          "username": "johndoe",
+          "firstName": "John",
+          "lastName": "Doe"
+        }
+      },
+      "toAccount": {
+        "id": 2,
+        "accountNumber": "ACC87654321",
+        "user": {
+          "id": 2,
+          "username": "janesmith",
+          "firstName": "Jane",
+          "lastName": "Smith"
+        }
+      },
       "status": "COMPLETED",
-      "description": "Salary deposit"
+      "timestamp": "2024-03-21T10:00:00",
+      "description": "Rent payment"
     }
   ],
   "pageable": {
@@ -343,6 +653,7 @@ mvn spring-boot:run
 - **Method**: GET
 - **Auth required**: Yes (JWT)
 - **Success Response**:
+
 ```json
 [
   {
@@ -351,7 +662,19 @@ mvn spring-boot:run
     "cardNumber": "**** **** **** 1234",
     "expiryDate": "01/25",
     "cvv": "***",
-    "status": "ACTIVE"
+    "status": "ACTIVE",
+    "user": {
+      "id": 1,
+      "username": "johndoe",
+      "firstName": "John",
+      "lastName": "Doe"
+    },
+    "account": {
+      "id": 1,
+      "accountType": "SAVINGS",
+      "accountNumber": "ACC12345678",
+      "balance": 1000.5
+    }
   }
 ]
 ```
@@ -362,13 +685,16 @@ mvn spring-boot:run
 - **Method**: POST
 - **Auth required**: Yes (JWT)
 - **Payload**:
+
 ```json
 {
   "cardType": "VISA",
   "accountId": 1
 }
 ```
+
 - **Success Response**:
+
 ```json
 {
   "id": 1,
@@ -376,13 +702,85 @@ mvn spring-boot:run
   "cardNumber": "**** **** **** 1234",
   "expiryDate": "01/25",
   "cvv": "***",
-  "status": "ACTIVE"
+  "status": "ACTIVE",
+  "user": {
+    "id": 1,
+    "username": "johndoe",
+    "firstName": "John",
+    "lastName": "Doe"
+  },
+  "account": {
+    "id": 1,
+    "accountType": "SAVINGS",
+    "accountNumber": "ACC12345678",
+    "balance": 1000.5
+  }
 }
 ```
+
 - **Error Response**:
+
 ```json
 {
   "error": "Account not found"
+}
+```
+
+#### Get User Cards
+
+- **URL**: `/api/cards/user/{userId}`
+- **Method**: GET
+- **Auth required**: Yes (JWT)
+
+#### Get Card Details
+
+- **URL**: `/api/cards/{id}`
+- **Method**: GET
+- **Auth required**: Yes (JWT)
+
+#### Update Card
+
+- **URL**: `/api/cards/{id}`
+- **Method**: PUT
+- **Auth required**: Yes (JWT)
+- **Payload**:
+
+```json
+{
+  "status": "ACTIVE"
+}
+```
+
+- **Success Response**:
+
+```json
+{
+  "id": 1,
+  "cardType": "VISA",
+  "cardNumber": "**** **** **** 1234",
+  "expiryDate": "01/25",
+  "cvv": "***",
+  "status": "ACTIVE",
+  "user": {
+    "id": 1,
+    "username": "johndoe",
+    "firstName": "John",
+    "lastName": "Doe"
+  },
+  "account": {
+    "id": 1,
+    "accountType": "SAVINGS",
+    "accountNumber": "ACC12345678",
+    "balance": 1000.5
+  }
+}
+```
+
+- **Error Response**:
+
+```json
+{
+  "error": "Card not found"
 }
 ```
 
@@ -392,12 +790,15 @@ mvn spring-boot:run
 - **Method**: DELETE
 - **Auth required**: Yes (JWT)
 - **Success Response**:
+
 ```json
 {
   "message": "Card successfully deleted"
 }
 ```
+
 - **Error Response**:
+
 ```json
 {
   "error": "Card not found"
@@ -406,70 +807,31 @@ mvn spring-boot:run
 
 ### Settings
 
-#### Get Settings
+#### Get User Settings
 
-- **URL**: `/api/settings`
+- **URL**: `/api/settings/user/{userId}`
 - **Method**: GET
 - **Auth required**: Yes (JWT)
-- **Success Response**:
-```json
-{
-  "id": 1,
-  "twoFactor": false,
-  "loginNotifications": false,
-  "emailNotifications": true,
-  "smsNotifications": false,
-  "transactionNotifications": true,
-  "marketingNotifications": false,
-  "showBalance": true,
-  "activityTracking": true,
-  "dataSharing": false
-}
-```
 
-#### Update Security Settings
+#### Update User Settings
 
-- **URL**: `/api/settings/security`
+- **URL**: `/api/settings/{id}`
 - **Method**: PUT
 - **Auth required**: Yes (JWT)
 - **Payload**:
-```json
-{
-  "twoFactor": true,
-  "loginNotifications": true
-}
-```
-- **Success Response**:
-```json
-{
-  "id": 1,
-  "twoFactor": true,
-  "loginNotifications": true,
-  "emailNotifications": true,
-  "smsNotifications": false,
-  "transactionNotifications": true,
-  "marketingNotifications": false,
-  "showBalance": true,
-  "activityTracking": true,
-  "dataSharing": false
-}
-```
 
-#### Update Notification Settings
-
-- **URL**: `/api/settings/notifications`
-- **Method**: PUT
-- **Auth required**: Yes (JWT)
-- **Payload**:
 ```json
 {
   "emailNotifications": true,
   "smsNotifications": true,
-  "transactionNotifications": true,
-  "marketingNotifications": false
+  "twoFactorAuth": true,
+  "language": "EN",
+  "timezone": "UTC"
 }
 ```
+
 - **Success Response**:
+
 ```json
 {
   "id": 1,
@@ -485,34 +847,27 @@ mvn spring-boot:run
 }
 ```
 
-#### Update Privacy Settings
+## Data Relationships
 
-- **URL**: `/api/settings/privacy`
-- **Method**: PUT
-- **Auth required**: Yes (JWT)
-- **Payload**:
-```json
-{
-  "showBalance": true,
-  "activityTracking": false,
-  "dataSharing": false
-}
-```
-- **Success Response**:
-```json
-{
-  "id": 1,
-  "twoFactor": true,
-  "loginNotifications": true,
-  "emailNotifications": true,
-  "smsNotifications": true,
-  "transactionNotifications": true,
-  "marketingNotifications": false,
-  "showBalance": true,
-  "activityTracking": false,
-  "dataSharing": false
-}
-```
+### User-Account Relationship
+
+- Each user can have multiple accounts
+- Each account belongs to exactly one user
+- When creating an account, it is automatically associated with the authenticated user
+
+### User-Card Relationship
+
+- Each user can have multiple cards
+- Each card belongs to exactly one user
+- Each card is associated with one account
+- When creating a card, it is automatically associated with the authenticated user and the specified account
+
+### Transaction Relationships
+
+- Each transaction involves at least one account
+- For transfers, a transaction involves two accounts (from and to)
+- Transactions maintain references to both the accounts and their associated users
+- Transaction history can be filtered by account, user, or transaction type
 
 ## Security
 
@@ -535,3 +890,112 @@ The API returns appropriate HTTP status codes:
 - 500 Internal Server Error: Unexpected server error
 
 Error responses include a descriptive message to help troubleshoot issues.
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Account and Card Management
+
+### Account Linking
+
+- Each account is automatically linked to the user who creates it
+- Users can have multiple accounts of different types (SAVINGS, CHECKING, etc.)
+- Each account has a unique account number
+- Accounts maintain their own balance and currency
+
+### Card Linking
+
+- Cards are linked to both a user and an account
+- Each card belongs to exactly one user and one account
+- Cards cannot be created for accounts that don't belong to the user
+- Cards have security features like CVV and expiry date
+- Card numbers are automatically generated and masked in responses
+
+### Transfer Functionality
+
+The API supports transfers between accounts with the following features:
+
+1. **Same-User Transfers**
+
+   - Transfer between accounts owned by the same user
+   - Example: Transfer from savings to checking account
+   - Requires authentication and account ownership verification
+
+2. **Different-User Transfers**
+   - Transfer between accounts owned by different users
+   - Example: Transfer to another user's account
+   - Requires authentication and account ownership verification
+   - Both accounts must have the same currency
+
+#### Transfer Implementation
+
+The transfer functionality is implemented through a two-layer service architecture:
+
+1. **AccountService Layer**
+
+   - Handles high-level transfer authorization
+   - Verifies account ownership
+   - Delegates the actual transfer to TransactionService
+
+2. **TransactionService Layer**
+   - Handles the actual transfer logic
+   - Updates account balances
+   - Creates transaction records
+   - Performs currency validation
+   - Ensures atomicity of the operation
+
+#### Transfer Rules and Validations
+
+- Source account must belong to the authenticated user
+- Both accounts must have the same currency
+- Source account must have sufficient funds
+- Transfers are atomic (either both accounts are updated or neither is)
+- Transfers cannot be made between accounts with different currencies
+- Transfers cannot be made to the same account
+- All transfers are recorded in the transaction history
+- Transfer amounts must be positive
+
+#### Transfer Process
+
+1. **Authorization Check**
+
+   - Verify user authentication
+   - Verify account ownership
+   - Check account existence
+
+2. **Validation**
+
+   - Validate transfer amount
+   - Check currency compatibility
+   - Verify sufficient funds
+   - Validate account status
+
+3. **Execution**
+
+   - Update source account balance
+   - Update destination account balance
+   - Create transaction record
+   - All operations are wrapped in a transaction
+
+4. **Response**
+   - Return transaction details
+   - Include updated account information
+   - Provide transaction status
+
+### Security Measures
+
+- All card operations require authentication
+- Card details are masked in responses
+- Users can only access their own accounts and cards
+- Transfer operations verify account ownership
+- Currency validation for transfers
+- Balance checks before transfers

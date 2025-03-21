@@ -141,6 +141,11 @@ public class TransactionServiceImpl implements TransactionService {
         Account toAccount = accountRepository.findById(toAccountId)
                 .orElseThrow(() -> new RuntimeException("Destination account not found with id: " + toAccountId));
         
+        // Check if accounts have the same currency
+        if (!fromAccount.getCurrency().equals(toAccount.getCurrency())) {
+            throw new RuntimeException("Cannot transfer between accounts with different currencies");
+        }
+        
         if (fromAccount.getBalance().compareTo(amount) < 0) {
             throw new IllegalArgumentException("Insufficient funds");
         }

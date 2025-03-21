@@ -54,6 +54,9 @@ public class AccountServiceImpl implements AccountService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private TransactionService transactionService;
+
     @Override
     public List<Account> getAllAccounts() {
         return accountRepository.findAll();
@@ -176,25 +179,21 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional
     public void transfer(Long fromAccountId, Long toAccountId, BigDecimal amount) {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Transfer amount must be positive");
-        }
+        // Get the authenticated user
+        String authenticatedUsername = getAuthenticatedUsername();
+        User authenticatedUser = userService.findUserByEmail(authenticatedUsername);
         
+        // Get the source account
         Account fromAccount = accountRepository.findById(fromAccountId)
                 .orElseThrow(() -> new RuntimeException("Source account not found with id: " + fromAccountId));
         
-        Account toAccount = accountRepository.findById(toAccountId)
-                .orElseThrow(() -> new RuntimeException("Target account not found with id: " + toAccountId));
-        
-        if (fromAccount.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient funds in source account");
+        // Check if the authenticated user owns the source account
+        if (!fromAccount.getUser().getId().equals(authenticatedUser.getId())) {
+            throw new RuntimeException("You can only transfer from your own accounts");
         }
         
-        fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
-        toAccount.setBalance(toAccount.getBalance().add(amount));
-        
-        accountRepository.save(fromAccount);
-        accountRepository.save(toAccount);
+        // Use TransactionService to perform the transfer
+        transactionService.transfer(fromAccountId, toAccountId, amount, "Transfer between accounts");
     }
     
     @Override
